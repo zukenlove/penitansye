@@ -1,1 +1,11 @@
-{{ form }}
+{% extends 'penitansyeAPI/base.html' %}
+
+{% block content %}
+    <form action="{% url 'penitansye:patient' %}" method="POST">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table}}
+        </table>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}
