@@ -24,9 +24,10 @@ class User(AbstractBaseUser):
     date_of_birth = models.DateField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(unique=True)
-
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
@@ -41,12 +42,14 @@ class User(AbstractBaseUser):
 
 
 class Patient(User):
+    emmergencycontactname = models.CharField(max_length=200)
+    emmergencycontactphone = models.CharField(max_length=15)
+    bloodType = models.CharField(max_length=50)
+    Allergies = models.CharField(max_length= 50)
     symptoms = models.TextField(blank=True, null=True)
     
-    # @property
-    # def role(self):
-    #     # Friendly description
-    #     return f"Patient - {self.firstname} {self.lastname}"   
+    def __str__(self):
+        return f"Patient - {self.firstname} {self.lastname}"   
 
 
 class Doctor(User):
@@ -81,3 +84,41 @@ class Record(models.Model):
     def __str__(self):
         return f"Record: {self.patient} visited Dr. {self.doctor.lastname} at {self.clinic.clinic_name} on {self.visit_date.strftime('%Y-%m-%d %H:%M')}"
 
+
+from django.db import models
+from django.utils import timezone
+
+class Appointment(models.Model):
+    patient = models.ForeignKey(
+        'Patient',
+        on_delete=models.CASCADE,
+        related_name='appointments'
+    )
+    doctor = models.ForeignKey(
+        'Doctor',
+        on_delete=models.CASCADE,
+        related_name='appointments'
+    )
+    clinic = models.ForeignKey(
+        'Clinic',
+        on_delete=models.CASCADE,
+        related_name='appointments'
+    )
+
+    visit_date = models.DateTimeField()   # exact date + time
+    treatment = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['visit_date']
+        unique_together = ('doctor', 'visit_date')  
+        # Prevent double-booking a doctor
+
+    def __str__(self):
+        return (
+            f"Appointment: {self.patient.firstname} {self.patient.lastname} "
+            f"with Dr. {self.doctor.lastname} at {self.clinic.clinic_name} "
+            f"on {self.visit_date.strftime('%Y-%m-%d %H:%M')}"
+        )
